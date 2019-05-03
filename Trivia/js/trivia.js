@@ -1,117 +1,94 @@
-function fetchRequest(url){
+function fetchRequest(url) {
 	return fetch(url)
-  		.then(body => body.json()) //retourneert promise object met response
+		.then(body => body.json()) //retourneert promise object met response
 }
+
 class Trivia {
 	constructor(category, difficulty, question, answers, correctAnswer) {
-		this.category = category;
-		this.difficulty = difficulty;
-		this.question = question;
-		this.answers = answers;
-		this.correctAnswer = correctAnswer
+		this._category = category;
+		this._difficulty = difficulty;
+		this._question = question;
+		this._answers = answers;
+		this._correctAnswer = correctAnswer
 	}
 	get category() {
 		return this._category;
 	}
-	set category(value) {
-		this._category = value;
-	}
 	get difficulty() {
 		return this._difficulty;
-	}
-	set difficulty(value) {
-		this._difficulty = value;
-	}
-	set question(value) {
-		this._question = value;
 	}
 	get question() {
 		return this._question;
 	}
-	set answers(value) {
-		this._answers = value;
-	}
 	get answers() {
 		return this._answers;
-	}
-	set correctAnswer(value) {
-		this._correctAnswer = value;
 	}
 	get correctAnswer() {
 		return this._correctAnswer;
 	}
-	
-}
-class TriviaRepository {
-  	constructor() {
-    	this._triviaObjects = [];
-		this.currentTrivia = 0;
-		this.correctAnswers = 0;
-  	}
+	isCorrectAnswer(answer) {
+		return answer === this._correctAnswer;
+	}
 
-  	get triviaObjects() { return this._triviaObjects; }
-	get currentTrivia() {
-		return this._currentTrivia;
+}
+
+class TriviaGame {
+	constructor(trivias) {
+		this._trivias = trivias;
+		this._currentTrivia = 0;
+		this._correctAnswers = 0;
 	}
-	set currentTrivia(value) {
-		this._currentTrivia = value;
-	}
+
 	get correctAnswers() {
 		return this._correctAnswers;
 	}
-	set correctAnswers(value) {
-		this._correctAnswers = value;
-	}
-	get numberOfTrivias(){
-		return this._triviaObjects.length;
+
+	get numberOfTrivias() {
+		return this._trivias.length;
 	}
 
-  	addTriviaObjects(dataObjects) {
-		  this._triviaObjects = 
-		         dataObjects.map(t=>new Trivia(t.category,t.difficulty,t.question,[...t.incorrect_answers,t.correct_answer],t.correct_answer));
-  	}
-
-  	getNextTrivia(){
-		this.currentTrivia++;
-		this.triviaObjects[this.currentTrivia-1].answers.sort();
-		return this.triviaObjects[this.currentTrivia-1];
+	get currentTrivia() {
+		return this._currentTrivia;
 	}
-	
-	checkAnswer(answer){
-		if (this.triviaObjects[this.currentTrivia-1].correctAnswer === answer){
-			this.correctAnswers++;
+
+	getNextTrivia() {
+		this._currentTrivia++;
+		this._trivias[this.currentTrivia - 1].answers.sort();
+		return this._trivias[this.currentTrivia - 1];
+	}
+
+	checkAnswer(answer) {
+		if (this._trivias[this.currentTrivia - 1].isCorrectAnswer(answer)) {
+			this._correctAnswers++;
 			return true;
-		}
-		else return false;
+		} else return false;
 	}
-	checkEndGame(){
+
+	checkEndGame() {
 		return this.currentTrivia === this.numberOfTrivias;
-	} 
+	}
 }
+
 class TriviaApp {
 	constructor() {
-		this.triviaRepository = new TriviaRepository();		
-		this.getData();		
+		this.getData();
 	}
-	get triviaRepository() {
-		return this._triviaRepository;
-	}
-	set triviaRepository(value) {
-		this._triviaRepository = value;
-	}
-	
-	getData(){
+
+	getData() {
 		fetchRequest('https://opentdb.com/api.php?amount=10')
-  		.then(resultValue => {
-			this.triviaRepository.addTriviaObjects(resultValue.results);
-			this.showTrivia(this.triviaRepository.getNextTrivia());
-		})
-		.catch(rejectValue => { console.log(rejectValue); });
+			.then(resultValue => {
+				this._triviaGame = new TriviaGame(resultValue.results.map(t => new Trivia(t.category, t.difficulty, t.question, [...t.incorrect_answers, t.correct_answer], t.correct_answer)));
+				this.showTrivia(this._triviaGame.getNextTrivia());
+			})
+			.catch(rejectValue => {
+				console.log(rejectValue);
+			});
 	}
-	showTrivia(trivia){
+
+	showTrivia(trivia) {
 		const triviaHTML = document.getElementById("trivia");
 		triviaHTML.innerHTML = '';
-		document.getElementById("number").innerText= `Question: ${this.triviaRepository.currentTrivia}/${this.triviaRepository.numberOfTrivias}`;
+		document.getElementById("number").innerText = `Question: ${this._triviaGame.currentTrivia}/${this._triviaGame.numberOfTrivias}`;
 		triviaHTML.insertAdjacentHTML('beforeend',
 			`<div class="card-content">
 				<span class="card-title">${trivia.category} - Difficulty: ${trivia.difficulty}</span>
@@ -136,34 +113,35 @@ class TriviaApp {
 			)
 		});
 		divCA.appendChild(divRow);
-		triviaHTML.appendChild(divCA);	
-			triviaHTML.insertAdjacentHTML('beforeend',
-				`<div class="card-action">
+		triviaHTML.appendChild(divCA);
+		triviaHTML.insertAdjacentHTML('beforeend',
+			`<div class="card-action">
 					<a id="next" class="btn-small blue darken-2">Submit answer<i class="material-icons right">send</i></a>
-				</div>`		
-			)
-			document.getElementById('next').onclick = () => {
+				</div>`
+		)
+		document.getElementById('next').onclick = () => {
+			if (document.querySelector('input[name="group"]:checked')) {
 				triviaHTML.insertAdjacentHTML('beforeend',
 					`<div class="card-action">
 						<p>Answer: ${trivia.correctAnswer}</p>
-					</div>`		
+					</div>`
 				);
-			this.triviaRepository.checkAnswer(document.querySelector('input[name="group"]:checked').value);
-			document.getElementById("correct").innerText= `Correct answers: ${this.triviaRepository.correctAnswers}/${this.triviaRepository.currentTrivia}`;
-			if (!this._triviaRepository.checkEndGame()){
-				document.getElementById('next').innerText = 'Next';
-				document.getElementById('next').onclick = ()=>{
-					this.showTrivia(this.triviaRepository.getNextTrivia());
+				this._triviaGame.checkAnswer(document.querySelector('input[name="group"]:checked').value);
+				document.getElementById("correct").innerText = `Correct answers: ${this._triviaGame.correctAnswers}/${this._triviaGame.currentTrivia}`;
+				if (!this._triviaGame.checkEndGame()) {
+					document.getElementById('next').innerText = 'Next';
+					document.getElementById('next').onclick = () => {
+						this.showTrivia(this._triviaGame.getNextTrivia());
+					};
+				} else {
+					document.getElementById('next').className = 'btn-small blue darken-2 disabled';
 				};
 			}
-			else{
-				document.getElementById('next').className = 'btn-small blue darken-2 disabled';
-			};
 		}
 	}
 }
 
-const init = function(){
+const init = function () {
 	const app = new TriviaApp();
 }
 
