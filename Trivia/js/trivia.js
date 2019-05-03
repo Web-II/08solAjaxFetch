@@ -73,7 +73,6 @@ class TriviaApp {
 	constructor() {
 		this.getData();
 	}
-
 	getData() {
 		fetchRequest('https://opentdb.com/api.php?amount=10')
 			.then(resultValue => {

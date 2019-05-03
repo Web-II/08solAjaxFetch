@@ -5,32 +5,26 @@ function fetchRequest(url){
 
 class Film {
   constructor(id, title, type, poster, year) {
-    this.id = id;
-    this.title = title;
+    this._id = id;
+    this._title = title;
     this.poster = poster;
-    this.type = type;
-    this.year = year;
-    this.detail = {time:'',genre:'',director:'',actors:'',plot:'',language:''}
+    this._type = type;
+    this._year = year;
+    this._detail = {time:'',genre:'',director:'',actors:'',plot:'',language:''}
   }
   get id() { return this._id; }
-  set id(value) { this._id = value; }
-
+  
   get title() { return this._title; }
-  set title(value) { this._title = value; }
 
   get type() { return this._type; }
-  set type(value) { this._type = value; }
 
   get poster() { return this._poster; }
   set poster(value) { value !== 'N/A' ? this._poster = value : this.poster = 'images/No_image_available.svg'; }
  
   get year() { return this._year; }
-  set year(value) { this._year = value; }
 
   get detail() { return this._detail; }
-  set detail(value) { this._detail = value; }
-
-
+  
 }
 
 class FilmRepository {
@@ -60,12 +54,11 @@ class FilmRepository {
 
 class FilmBrowserApp {
   constructor() {
-    this.filmRepository = new FilmRepository();
+    this._filmRepository = new FilmRepository();
   }
 
   get filmRepository() { return this._filmRepository; }
-  set filmRepository(value) { this._filmRepository = value; }
-
+  
   searchFilms(searchText){
       if (searchText !== '' && /([^\s])/.test(searchText)){
         fetchRequest(`http://www.omdbapi.com/?s=${searchText}&apikey=57927523`)
@@ -73,6 +66,9 @@ class FilmBrowserApp {
           if (resultValue.Response === 'True'){
 			        this.filmRepository.addFilms(resultValue.Search);
 			        this.showFilms();
+          }
+          else{
+            this.showNoResult();
           }
 		    })
 		    .catch(rejectValue => { console.log(rejectValue); });
@@ -82,12 +78,9 @@ class FilmBrowserApp {
   getFilm(id){
     fetchRequest(`http://www.omdbapi.com/?i=${id}&plot=full&apikey=57927523`)
         .then(resultValue => {
-          //console.log(resultValue);
           if (resultValue.Response === 'True'){
               this.filmRepository.addDetail(id,resultValue);
               const film = this.filmRepository.getFilmById(id);
-			        //this.filmRepository.addFilms(resultValue.Search);
-              //console.log(this.filmRepository.films)
 			        this.showDetailFilm(film);
           }
 		    })
@@ -154,6 +147,17 @@ class FilmBrowserApp {
       `
     );
     document.getElementById('listFilms').onclick = ()=>{this.showFilms();}
+  }
+
+  showNoResult(){
+    document.getElementById('films').innerHTML = '';
+    document.getElementById('films').insertAdjacentHTML('beforeend',
+      `
+      <div class="col s12">
+        <p>No films found for this search!!</p>
+      </div>
+      `
+    );
   }
 }
 
