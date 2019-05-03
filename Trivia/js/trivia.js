@@ -103,14 +103,12 @@ class TriviaApp {
 	getData(){
 		fetchRequest('https://opentdb.com/api.php?amount=10')
   		.then(resultValue => {
-			const trColl = resultValue.results;
-			this.triviaRepository.addTriviaObjects(trColl);
-			this.showTrivia();
+			this.triviaRepository.addTriviaObjects(resultValue.results);
+			this.showTrivia(this.triviaRepository.getNextTrivia());
 		})
 		.catch(rejectValue => { console.log(rejectValue); });
 	}
-	showTrivia(){
-		const trivia = this.triviaRepository.getNextTrivia();
+	showTrivia(trivia){
 		const triviaHTML = document.getElementById("trivia");
 		triviaHTML.innerHTML = '';
 		document.getElementById("number").innerText= `Question: ${this.triviaRepository.currentTrivia}/${this.triviaRepository.numberOfTrivias}`;
@@ -133,7 +131,8 @@ class TriviaApp {
 							<span>${a}</span>
 						</label>
 					</p>
-				</div>`
+				</div>
+				`
 			)
 		});
 		divCA.appendChild(divRow);
@@ -144,17 +143,17 @@ class TriviaApp {
 				</div>`		
 			)
 			document.getElementById('next').onclick = () => {
-			triviaHTML.insertAdjacentHTML('beforeend',
-				`<div class="card-action">
-					<p>Answer: ${trivia.correctAnswer}</p>
-				</div>`		
+				triviaHTML.insertAdjacentHTML('beforeend',
+					`<div class="card-action">
+						<p>Answer: ${trivia.correctAnswer}</p>
+					</div>`		
 				);
 			this.triviaRepository.checkAnswer(document.querySelector('input[name="group"]:checked').value);
-			document.getElementById("correct").innerText= `Correct answers: ${this.triviaRepository.correctAnswers}/${this.triviaRepository.numberOfTrivias}`;
+			document.getElementById("correct").innerText= `Correct answers: ${this.triviaRepository.correctAnswers}/${this.triviaRepository.currentTrivia}`;
 			if (!this._triviaRepository.checkEndGame()){
 				document.getElementById('next').innerText = 'Next';
 				document.getElementById('next').onclick = ()=>{
-					this.showTrivia();
+					this.showTrivia(this.triviaRepository.getNextTrivia());
 				};
 			}
 			else{

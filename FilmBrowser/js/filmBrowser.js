@@ -146,12 +146,14 @@ class FilmBrowserApp {
                   <li><label>year:</label> ${film.year}</li>
                   ${details}
                 </ul>
-              </div> 
+              </div>
             </div>       
           </div>
+          <a id="listFilms" class="waves-effect waves-light btn-small"><i class="material-icons right">list</i>Back</a>            
         </div>
       `
     );
+    document.getElementById('listFilms').onclick = ()=>{this.showFilms();}
   }
 }
 
