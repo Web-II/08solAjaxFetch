@@ -33,8 +33,8 @@ class Trivia {
 }
 
 class TriviaGame {
-	constructor(trivias) {
-		this._trivias = trivias;
+	constructor() {
+		this._trivias = new Array();
 		this._currentTrivia = 0;
 		this._correctAnswers = 0;
 	}
@@ -50,7 +50,9 @@ class TriviaGame {
 	get currentTrivia() {
 		return this._currentTrivia;
 	}
-
+	addTrivias(dataObjects){
+		this._trivias = dataObjects.map(t => new Trivia(t.category, t.difficulty, t.question, [...t.incorrect_answers, t.correct_answer], t.correct_answer));
+	}
 	getNextTrivia() {
 		this._currentTrivia++;
 		this._trivias[this.currentTrivia - 1].answers.sort();
@@ -76,7 +78,8 @@ class TriviaApp {
 	getData() {
 		fetchRequest('https://opentdb.com/api.php?amount=10')
 			.then(resultValue => {
-				this._triviaGame = new TriviaGame(resultValue.results.map(t => new Trivia(t.category, t.difficulty, t.question, [...t.incorrect_answers, t.correct_answer], t.correct_answer)));
+				this._triviaGame = new TriviaGame();
+				this._triviaGame.addTrivias(resultValue.results);
 				this.showTrivia(this._triviaGame.getNextTrivia());
 			})
 			.catch(rejectValue => {
