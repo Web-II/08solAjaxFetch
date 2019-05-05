@@ -29,14 +29,13 @@ class Film {
 
 class FilmRepository {
   constructor() {
-    this.films = [];
+    this._films = [];
   }
 
   get films() { return this._films; }
-  set films(value) { this._films = value; }
 
   addFilms(arrFilms) {
-    this.films = arrFilms.map(obj=>new Film(obj.imdbID, obj.Title, obj.Type, obj.Poster, obj.Year));
+    this._films = arrFilms.map(obj=>new Film(obj.imdbID, obj.Title, obj.Type, obj.Poster, obj.Year));
   }
   addDetail(id,objDetail){
     const film = this.getFilmById(id);
@@ -48,7 +47,7 @@ class FilmRepository {
     film.detail.language = objDetail.Language;
   }
   getFilmById(id){
-    return this.films.find((f)=>f.id === id);
+    return this._films.find((f)=>f.id === id);
   }
 }
 
