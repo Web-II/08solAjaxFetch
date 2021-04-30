@@ -38,10 +38,6 @@ class TriviaGame {
 		this._answers = new Array();
 	}
 
-	get correctAnswers() {
-		return this._answers;
-	}
-
 	get numberOfTrivias() {
 		return this._trivias.length;
 	}
@@ -85,7 +81,7 @@ class TriviaApp {
 	showTrivia(trivia) {
 		const triviaHTML = document.getElementById("trivia");
 		triviaHTML.innerHTML = '';
-		document.getElementById("number").innerText = `Question: ${this._triviaGame.numberOfAnswers + 1}/${this._triviaGame.numberOfTrivias}`;
+		document.getElementById("question").innerText = `Question: ${this._triviaGame.numberOfAnswers + 1}/${this._triviaGame.numberOfTrivias}`;
 		triviaHTML.insertAdjacentHTML('beforeend',
 			`<div class="card-content">
 				<span>${trivia.category} - Difficulty: ${trivia.difficulty}</span><br>
