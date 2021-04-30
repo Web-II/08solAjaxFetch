@@ -1,6 +1,6 @@
-function fetchRequest(url){
-	return fetch(url)
-  		.then(body => body.json()) 
+function fetchRequest(url) {
+  return fetch(url)
+    .then(body => body.json())
 }
 
 class Film {
@@ -10,21 +10,21 @@ class Film {
     this.poster = poster;
     this._type = type;
     this._year = year;
-    this._detail = {time:'',genre:'',director:'',actors:'',plot:'',language:''}
+    this._detail = { time: '', genre: '', director: '', actors: '', plot: '', language: '' }
   }
   get id() { return this._id; }
-  
+
   get title() { return this._title; }
 
   get type() { return this._type; }
 
   get poster() { return this._poster; }
   set poster(value) { value !== 'N/A' ? this._poster = value : this.poster = 'images/No_image_available.svg'; }
- 
+
   get year() { return this._year; }
 
   get detail() { return this._detail; }
-  
+
 }
 
 class FilmRepository {
@@ -35,9 +35,10 @@ class FilmRepository {
   get films() { return this._films; }
 
   addFilms(arrFilms) {
-    this._films = arrFilms.map(obj=>new Film(obj.imdbID, obj.Title, obj.Type, obj.Poster, obj.Year));
+    this._films = arrFilms.map(obj => new Film(obj.imdbID, obj.Title, obj.Type, obj.Poster, obj.Year));
   }
-  addDetail(id,objDetail){
+
+  addDetail(id, objDetail) {
     const film = this.getFilmById(id);
     film.detail.time = objDetail.Runtime;
     film.detail.genre = objDetail.Genre;
@@ -46,8 +47,8 @@ class FilmRepository {
     film.detail.plot = objDetail.Plot;
     film.detail.language = objDetail.Language;
   }
-  getFilmById(id){
-    return this._films.find((f)=>f.id === id);
+  getFilmById(id) {
+    return this._films.find((f) => f.id === id);
   }
 }
 
@@ -56,46 +57,50 @@ class FilmBrowserApp {
     this._filmRepository = new FilmRepository();
   }
 
-  get filmRepository() { return this._filmRepository; }
-  
-  searchFilms(searchText){
-      if (searchText !== '' && /([^\s])/.test(searchText)){
-        fetchRequest(`http://www.omdbapi.com/?s=${searchText}&apikey=57927523`)
+
+  searchFilms(searchText) {
+    if (searchText !== '' && /([^\s])/.test(searchText)) {
+      fetchRequest(`http://www.omdbapi.com/?s=${searchText}&apikey=57927523`)
         .then(resultValue => {
-          if (resultValue.Response === 'True'){
-			        this.filmRepository.addFilms(resultValue.Search);
-			        this.showFilms();
+          if (resultValue.Response === 'True') {
+            this._filmRepository.addFilms(resultValue.Search);
+            this.showFilms();
           }
-          else{
-            this.showNoResult();
+          else {
+            this.showMessage('No films found for this search!!');
           }
-		    })
-		    .catch(rejectValue => { console.log(rejectValue); });
-      }
+        })
+        .catch(rejectValue => { this.showMessage(`Something went wrong retrieving the film data: ${rejectValue}`); });
+    }
+    else {
+      this.showMessage('The search can not be empty!!');
+    }
   }
 
-  getFilm(id){
+  getFilm(id) {
     fetchRequest(`http://www.omdbapi.com/?i=${id}&plot=full&apikey=57927523`)
-        .then(resultValue => {
-          if (resultValue.Response === 'True'){
-              this.filmRepository.addDetail(id,resultValue);
-              const film = this.filmRepository.getFilmById(id);
-			        this.showDetailFilm(film);
-          }
-		    })
-		    .catch(rejectValue => { console.log(rejectValue); });
+      .then(resultValue => {
+        if (resultValue.Response === 'True') {
+          this._filmRepository.addDetail(id, resultValue);
+          const film = this._filmRepository.getFilmById(id);
+          this.showDetailFilm(film);
+        }
+      })
+      .catch(rejectValue => {
+        this.showMessage(`Something went wrong retrieving the film detail data: ${rejectValue}`);
+      });
   }
-  
+
 
   showFilms() {
     document.getElementById('films').innerHTML = '';
-    this.filmRepository.films.forEach((film) => {
+    this._filmRepository.films.forEach((film) => {
       document.getElementById('films').insertAdjacentHTML('beforeend',
-      `     
+        `     
         <div class="col s12 m6">
           <div class="card small horizontal">
             <div class="card-image">
-              <img src="${film.poster}">
+              <img id="${film.id}" src="${film.poster}">
               </div>
             <div class="card-stacked">  
               <div class="card-content">
@@ -104,31 +109,30 @@ class FilmBrowserApp {
                   <li>Type: ${film.type}</li>
                   <li>Year: ${film.year}</li>
                 </ul>
-                <a id="${film.id}" class="btn-floating btn-small waves-effect waves-light green"><i class="material-icons">details</i></a>
-              </div> 
+             </div> 
             </div>       
           </div>
         </div>
       `
       );
-      document.getElementById(film.id).onclick = ()=>{
+      document.getElementById(film.id).onclick = () => {
         this.getFilm(film.id);
       }
     });
   }
 
-  showDetailFilm(film){
+  showDetailFilm(film) {
     let details = '';
     Object.entries(film.detail).forEach(([key, value]) => {
-       details += `<li><label>${key}:</label> ${value}</li>`;
+      details += `<li><label>${key}:</label> ${value}</li>`;
     });
-    document.getElementById('films').innerHTML = '';    
+    document.getElementById('films').innerHTML = '';
     document.getElementById('films').insertAdjacentHTML('beforeend',
       `     
         <div class="col s12">
           <div class="card horizontal">
             <div class="card-image">
-              <img src="${film.poster}">
+              <img id="listFilms" src="${film.poster}">
             </div>
             <div class="card-stacked">  
               <div class="card-content">
@@ -141,28 +145,27 @@ class FilmBrowserApp {
               </div>
             </div>       
           </div>
-          <a id="listFilms" class="waves-effect waves-light btn-small"><i class="material-icons right">list</i>Back</a>            
         </div>
       `
     );
-    document.getElementById('listFilms').onclick = ()=>{this.showFilms();}
+    document.getElementById('listFilms').onclick = () => { this.showFilms(); }
   }
 
-  showNoResult(){
+  showMessage(message) {
     document.getElementById('films').innerHTML = '';
     document.getElementById('films').insertAdjacentHTML('beforeend',
       `
       <div class="col s12">
-        <p>No films found for this search!!</p>
+        <p>${message}</p>
       </div>
       `
     );
   }
 }
 
-const init = function() {
+const init = function () {
   const filmBrowserApp = new FilmBrowserApp();
-  document.getElementById("searchBtn").onclick = ()=>{
+  document.getElementById("searchBtn").onclick = () => {
     filmBrowserApp.searchFilms(document.getElementById('searchText').value)
   }
 }

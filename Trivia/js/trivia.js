@@ -35,39 +35,34 @@ class Trivia {
 class TriviaGame {
 	constructor() {
 		this._trivias = new Array();
-		this._currentTrivia = 0;
-		this._correctAnswers = 0;
+		this._answers = new Array();
 	}
 
 	get correctAnswers() {
-		return this._correctAnswers;
+		return this._answers;
 	}
 
 	get numberOfTrivias() {
 		return this._trivias.length;
 	}
-
-	get currentTrivia() {
-		return this._currentTrivia;
+	get numberOfAnswers() {
+		return this._answers.length;
 	}
-	addTrivias(dataObjects){
+	get trivia() {
+		return this._trivias[this.numberOfAnswers];
+	}
+	get correctAnswers() {
+		return this._answers.reduce((result, a) => a ? result + 1 : result, 0);
+	}
+	addTrivias(dataObjects) {
 		this._trivias = dataObjects.map(t => new Trivia(t.category, t.difficulty, t.question, [...t.incorrect_answers, t.correct_answer], t.correct_answer));
 	}
-	getNextTrivia() {
-		this._currentTrivia++;
-		this._trivias[this.currentTrivia - 1].answers.sort();
-		return this._trivias[this.currentTrivia - 1];
-	}
-
 	checkAnswer(answer) {
-		if (this._trivias[this.currentTrivia - 1].isCorrectAnswer(answer)) {
-			this._correctAnswers++;
-			return true;
-		} else return false;
+		this._answers.push(this.trivia.isCorrectAnswer(answer));
+		return this._answers[this.numberOfAnswers - 1];
 	}
-
 	checkEndGame() {
-		return this.currentTrivia === this.numberOfTrivias;
+		return this.numberOfTrivias === this.numberOfAnswers;
 	}
 }
 
@@ -80,21 +75,21 @@ class TriviaApp {
 			.then(resultValue => {
 				this._triviaGame = new TriviaGame();
 				this._triviaGame.addTrivias(resultValue.results);
-				this.showTrivia(this._triviaGame.getNextTrivia());
+				this.showTrivia(this._triviaGame.trivia);
 			})
 			.catch(rejectValue => {
-				console.log(rejectValue);
+				document.getElementById("answer").innerText = `Something went wrong retrieving the quiz data: ${rejectValue}`;
 			});
 	}
 
 	showTrivia(trivia) {
 		const triviaHTML = document.getElementById("trivia");
 		triviaHTML.innerHTML = '';
-		document.getElementById("number").innerText = `Question: ${this._triviaGame.currentTrivia}/${this._triviaGame.numberOfTrivias}`;
+		document.getElementById("number").innerText = `Question: ${this._triviaGame.numberOfAnswers + 1}/${this._triviaGame.numberOfTrivias}`;
 		triviaHTML.insertAdjacentHTML('beforeend',
 			`<div class="card-content">
-				<span class="card-title">${trivia.category} - Difficulty: ${trivia.difficulty}</span>
-				<p>${trivia.question}</p>
+				<span>${trivia.category} - Difficulty: ${trivia.difficulty}</span><br>
+				<span>${trivia.question}</span>
 			</div>`
 		);
 		const divCA = document.createElement('div');
@@ -123,17 +118,14 @@ class TriviaApp {
 		)
 		document.getElementById('next').onclick = () => {
 			if (document.querySelector('input[name="group"]:checked')) {
-				triviaHTML.insertAdjacentHTML('beforeend',
-					`<div class="card-action">
-						<p>Answer: ${trivia.correctAnswer}</p>
-					</div>`
-				);
+				document.getElementById("answer").innerHTML = `The correct answer is: <span class="bold">${trivia.correctAnswer}</span>`;
 				this._triviaGame.checkAnswer(document.querySelector('input[name="group"]:checked').value);
-				document.getElementById("correct").innerText = `Correct answers: ${this._triviaGame.correctAnswers}/${this._triviaGame.currentTrivia}`;
+				document.getElementById("correct").innerText = `Correct answers: ${this._triviaGame.correctAnswers}/${this._triviaGame.numberOfAnswers}`;
 				if (!this._triviaGame.checkEndGame()) {
-					document.getElementById('next').innerText = 'Next';
+					document.getElementById('next').innerText = 'Next question';
 					document.getElementById('next').onclick = () => {
-						this.showTrivia(this._triviaGame.getNextTrivia());
+						document.getElementById("answer").innerHTML = '';
+						this.showTrivia(this._triviaGame.trivia);
 					};
 				} else {
 					document.getElementById('next').className = 'btn-small blue darken-2 disabled';
@@ -144,7 +136,7 @@ class TriviaApp {
 }
 
 const init = function () {
-	const app = new TriviaApp();
+	new TriviaApp();
 }
 
 window.onload = init;

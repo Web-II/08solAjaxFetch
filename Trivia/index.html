@@ -14,19 +14,22 @@
 
 <body>
 	<div class="container">
-		<div class="row">
+		<header class="row">
 			<div class="col offset-m1 s12 m10">
 				<h4>Trivial Pursuit</h4>
 			</div>
-		</div>
-		<div class="row">
+		</header>
+		<main class="row">
 			<div class="col offset-m1 s12 m10">
-				<span id="number"></span><span id="correct"></span>
+				<div class="card-panel blue lighten-2">
+					<span id="number"></span>
+					<span id="correct"></span><br>
+					<span id="answer"></span>
+				</div>
 				<div id="trivia" class="card blue-text text-darken-2">
-					
 				</div>
 			</div>
-		</div>
+		</main>
 	</div>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 	<script src="js/trivia.js"></script>
